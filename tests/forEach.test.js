@@ -1,3 +1,4 @@
+import { expect, it } from '@jest/globals';
 // import {forEach} from 'lodash';
 import {forEach} from '../index';
 
@@ -19,6 +20,15 @@ describe('forEach', () => {
     it('should do nothing when an empty array is passed', () => {
       forEach([], () => res.push(0));
       expect(res).toEqual([]);
+    })
+    it('should stop iteration when the callback returns false',() => {
+      const input = [1, 2, 3];
+  
+      forEach(input, (val) => {
+        res.push(val)
+        return val < 2 
+      });
+      expect(res).toEqual([1, 2]);
     })
 
     describe('change input during iteration', () => {
@@ -52,12 +62,16 @@ describe('forEach', () => {
   })
 
   describe('Object', () => {
+    let input, iterCount;
+    beforeEach(() => {
+      input = {a: 1, b: 2, c: 3};
+      iterCount = 0;
+    })
     it('should iterate over an object', () => {
-      forEach({a: 1, b: 2, c: 3}, (val) => res.push(val * 2));
+      forEach(input, (val) => res.push(val * 2));
       expect(res).toEqual([2, 4, 6]);
     })
     it('should pass "(value, key, original)" to callback', () => {
-      const input = {a: 1, b: 2, c: 3};
       forEach(input, (value, key, original) => res.push([value, key, original]));
       expect(res).toEqual([[1, 'a', input], [2, 'b', input], [3, 'c', input]]);
     })
@@ -65,33 +79,35 @@ describe('forEach', () => {
       forEach({}, () => res.push(0));
       expect(res).toEqual([]);
     })
+    it('should stop iteration when the callback returns false',() => {
+      forEach(input, (val) => {
+        res.push(val);
+        return val < 2;
+      });
+      expect(res).toEqual([1, 2]);
+    })
 
     describe('change input during iteration', () => {
-      let input, iterCount;
-      beforeEach(() => {
-        input = {a: 1, b: 2, c: 3, d: 4};
-        iterCount = 0;
-      })
       it('should reflect element value change', () => {
         forEach(input, (val, key) => {
           input.b = 1;
           res.push(val);
         });
-        expect(res).toEqual([1, 1, 3, 4]);
+        expect(res).toEqual([1, 1, 3]);
       })
       it('should not change input length when element deleted during iteration', () => {
         forEach(input, () => {
-          delete input.d;
+          delete input.c;
           iterCount += 1;
         });
-        expect(iterCount).toEqual(4);
+        expect(iterCount).toEqual(3);
       })
       it('should not change input length when element pushed during iteration', () => {
         forEach(input, () => {
-          input.e = 5;
+          input.d = 4;
           iterCount += 1;
         });
-        expect(iterCount).toEqual(4);
+        expect(iterCount).toEqual(3);
       })
     })
   })
@@ -110,6 +126,16 @@ describe('forEach', () => {
       forEach('', () => res.push(0));
       expect(res).toEqual([]);
     })
+
+    it('should stop iteration when the callback returns false',() => {
+      const input = '123';
+  
+      forEach(input, (val) => {
+        res.push(val);
+        return val < '2';
+      });
+      expect(res).toEqual(['1', '2']);
+    })
   })
 
   it('should return its first argument', () => {
@@ -118,5 +144,27 @@ describe('forEach', () => {
       res = forEach(val, () => {});
       expect(res).toEqual(val);
     });
+  })
+
+  it('should iterate over an arguments object',() => {
+    const input = [1, 2, 3];
+    function func() {
+      forEach(arguments, (val) => res.push(val))
+    }
+    func(...input);
+    expect(res).toEqual(input);
+  })
+
+  it('should iterate over an function object',() => {
+    const input = [1, 2, 3];
+    function func() {};
+    // func.length = 10;
+    func.a = 1;
+    func.b = 2;
+    func.c = 3;
+    forEach(func, (val) => {
+      res.push(val)
+    });
+    expect(res).toEqual(input);
   })
 })
