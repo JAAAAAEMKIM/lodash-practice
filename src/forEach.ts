@@ -1,38 +1,19 @@
-import { Collection } from "./types";
+import { Collection, Iterator } from './types';
+import { getKey, preIterate } from './utils';
 
-function forEach(collection: Collection, callback: (value: any, key: any, original: Collection) => any): any {
-  let res: any;
+function forEach(collection: Collection, callback: Iterator): Collection {
+  const [iteratee, length, keys] = preIterate(collection);
+  _forEach(iteratee, length, callback, keys);
+  return collection;
+}
 
-  if (!collection) {
-    
-  } else if (typeof collection === 'string') {
-    const _string = new String(collection);
-    const length = _string.length;
-    for(let i = 0; i < length; i++) {
-      res = callback(collection[i], i, _string);
-      if(res === false) {
-        break;
-      }
-    }
-  } else if (Array.isArray(collection)) {
-    const arr = collection as Array<any>;
-    const length = arr.length;
-    for(let i = 0; i < length; i++) {
-      res = callback(collection[i], i, collection);
-      if(res === false) {
-        break;
-      }
-    }
-  } else {
-    const keys = Object.keys(collection);
-    for(let i = 0; i < keys.length; i++) {
-      res = callback(collection[keys[i]], keys[i], collection);
-      if(res === false) {
-        break;
-      }
+function _forEach(collection: Collection, length: number, callback: Iterator, keys?: Array<any>): void  {
+  for(let i = 0; i < length; i++) {
+    let key = getKey(i, keys);
+    if(callback(collection[key], key, collection) === false) {
+      break;
     }
   }
-  return collection;
 }
 
 export default forEach;
